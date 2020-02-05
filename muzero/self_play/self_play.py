@@ -1,5 +1,7 @@
 """Self-Play module: where the games are played."""
 
+import numpy as np
+
 from config import MuZeroConfig
 from game.game import AbstractGame
 from networks.network import AbstractNetwork
@@ -17,7 +19,12 @@ def run_selfplay(config: MuZeroConfig, storage: SharedStorage, replay_buffer: Re
         game = play_game(config, network)
         replay_buffer.save_game(game)
         returns.append(sum(game.rewards))
-    return sum(returns) / train_episodes
+    # Calculate statistics
+    score_mean = np.mean(returns)
+    score_std = np.std(returns)
+    score_min = np.min(returns)
+    score_max = np.max(returns)
+    return score_mean, score_std, score_min, score_max
 
 
 def run_eval(config: MuZeroConfig, storage: SharedStorage, eval_episodes: int):
@@ -27,7 +34,12 @@ def run_eval(config: MuZeroConfig, storage: SharedStorage, eval_episodes: int):
     for _ in range(eval_episodes):
         game = play_game(config, network, train=False)
         returns.append(sum(game.rewards))
-    return sum(returns) / eval_episodes if eval_episodes else 0
+    # Calculate statistics
+    score_mean = np.mean(returns)
+    score_std = np.std(returns)
+    score_min = np.min(returns)
+    score_max = np.max(returns)
+    return score_mean, score_std, score_min, score_max
 
 
 def play_game(config: MuZeroConfig, network: AbstractNetwork, train: bool = True) -> AbstractGame:
